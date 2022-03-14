@@ -20,7 +20,7 @@ Latest Arduino-esp32 added in Arduino IDE -> Preferences -> Additional board URL
 
 ## Configuration
 
-Simply open the plastic_eink_clock.ino in Arduino IDE and set up points 1 to 3:
+Simply open the **plastic_epaper_clock.ino** in Arduino IDE and set up points 1 to 3:
 
 - 1 Edit in Pl_microEPD.h the right EPD_WIDTH / EPD_HEIGHT for Adafruit GFX instantiation
 - 2 Update the ESP_WIFI Credentials so it can connect to the internet
