@@ -80,8 +80,8 @@ uint8_t syncHour1 = 0;       // IMPORTANT: Leave it on 0 for the first run!    O
 uint8_t syncHour2 = 7;       // Same here, 2nd request to Sync hour 
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
-// -300000 0.3s predicted boot time IDF | +1.x secs Arduino (why different booting time?)
-int64_t microsCorrection = 1490000;
+// -300000 0.3s predicted boot time IDF | +2.x secs Arduino (why has different boot time?)
+int64_t microsCorrection = 2790000;
 
 
 uint16_t backgroundColor = EPD_WHITE;
