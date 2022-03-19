@@ -14,7 +14,8 @@ Latest Arduino-esp32 added in Arduino IDE -> Preferences -> Additional board URL
 
      https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-- Adafruit GFX added as a global library
+- **Adafruit GFX** added as a global library
+- [SPI Tinypico Adapter for UC8156 displays](https://www.tindie.com/products/fasani/tinypico-small-uc8156-epaper-hat)
 - One of the PlasticLogic.com/sampleshop UC8156 epaper displays (1.1,2.1 or 3.1 inches)
 
 
