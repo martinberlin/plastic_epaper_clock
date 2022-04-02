@@ -79,15 +79,18 @@ void PL_microEPD::begin(bool whiteErase) {
             Serial.print("_EPDsize NOT detected\n");
             break;
     }
+    Serial.print("begin() writeRegister begin\n");
     writeRegister(EPD_DRIVERVOLTAGE, 0x25, 0xff, -1, -1);
     writeRegister(EPD_BORDERSETTING, 0x04, -1, -1, -1);
     writeRegister(EPD_LOADMONOWF, 0x60, -1, -1, -1);
     writeRegister(EPD_INTTEMPERATURE, 0x0A, -1, -1, -1);
     writeRegister(EPD_BOOSTSETTING, 0x22, 0x17, -1, -1);
+    Serial.print("begin() writeRegister end\n");
 
     setRotation(1);                             //Set landscape mode as default
-    if (whiteErase) WhiteErase();               //Start with a white refresh if TRUE
-    setTextColor(EPD_BLACK);                    //Set text color to black as default
+    //if (whiteErase) WhiteErase();               //Start with a white refresh if TRUE
+    //setTextColor(EPD_BLACK);                    //Set text color to black as default
+    Serial.print("end of display.begin()\n");
 }
 
 // ************************************************************************************
@@ -172,6 +175,7 @@ void PL_microEPD::invert() {
 // NOT FASTER THAN MINUTELY (OR RUN BACK2BACK UPDATES NOT LONGER AS ONE HOUR PER DAY.)
 // ************************************************************************************
 void PL_microEPD::update(int updateMode) {
+    Serial.printf("update(%d)\n\n",updateMode);
     scrambleBuffer();
     writeBuffer();
     powerOn();
@@ -318,6 +322,7 @@ uint8_t PL_microEPD::readTemperature() {
     temp = SPI.transfer(0xFF);
     digitalWrite(cs, HIGH);
     waitForBusyInactive(EPD_TMG_SRT);
+    Serial.printf("TEMP: %d\n", temp);
     return temp;
 }
 

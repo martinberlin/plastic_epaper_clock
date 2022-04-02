@@ -55,10 +55,10 @@ bool forceSync = false;
 
 // 3rd: Update with your WiFi credentials
 #define CONFIG_ESP_WIFI_SSID "WLAN-724300"
-#define CONFIG_ESP_WIFI_PASSWORD ""
+#define CONFIG_ESP_WIFI_PASSWORD "50238634630558382093"
 
 #define CONFIG_ESP_MAXIMUM_RETRY 2
-#define CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER 1
+#define CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER 2
 bool debugVerbose = false;
 // TinyPICO.com Dotstar or S2 with Neopixel led. Turn down power and set data /clk Gpios
 #define DOTSTAR_PWR 13
@@ -72,27 +72,29 @@ const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&
 char nvs_day_month[10];  // 15 if you want to store ", MON" (month)
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 1;
+int sleepMinutes = 2;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 uint8_t syncHour1 = 0;       // IMPORTANT: Leave it on 0 for the first run!    On -1 to not sync at this hour
 uint8_t syncHour2 = 7;       // Same here, 2nd request to Sync hour 
-// This microsCorrection represents the program time and will be discounted from deepsleep
+// This microsCorrection represents the program time ad will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
-int64_t microsCorrection = -300000; // 0.3 predicted boot time
+
+// -300000 0.3s predicted boot time IDF | +2.x secs Arduino (why has different boot time?)
+int64_t microsCorrection = 2990000;
 
 uint16_t backgroundColor = EPD_WHITE;
 uint16_t textColor = EPD_BLACK;
 // Adafruit GFX Font selection - - - - - -
 #include "fonts/Ubuntu_M16pt8b.h" // Day, Month
-#include "fonts/Ubuntu_M8pt8b.h"  // Last Sync message - Still not fully implemented
+#include "fonts/Ubuntu_M8pt8b.h"
 // Main digital clock hour font:
 #include "fonts/Ubuntu_M24pt8b.h" // HH:mm
 #include "fonts/Ubuntu_M36pt7b.h" // HH:mm
-
-// HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
-uint8_t fontSize = 24;
+#include "fonts/Ubuntu_M48pt8b.h" // HH:mm
+// HH:MM font size - Select between 24, 36 and 48. It should match the previously defined fonts size
+uint8_t fontSize = 36;
 
 // HTTP_EVENT_ON_DATA callback needs to know what information is going to parse - UPDATE: Now parses always hour + date
 // - - - - - - - - On 1: time  2: day, month
@@ -122,7 +124,7 @@ void deepsleep(){
 void updateClock() {
     // Half of display -NN should be the sum of pix per font
    uint8_t fontSpace = (fontSize/2); // Calculate aprox. how much space we need per font Character
-
+   Serial.println("updateClock");
    display.clear();
    display.fillScreen(backgroundColor);
    display.setRotation(1);
@@ -149,20 +151,20 @@ void updateClock() {
    switch (fontSize)
    {
        /* Bigger font */
+   case 48:
+       display.setFont(&Ubuntu_M48pt8b);
+       break;
    case 36:
        display.setFont(&Ubuntu_M36pt7b);
        break;
    case 24:
        display.setFont(&Ubuntu_M24pt8b);
        break;
+       
    default:
        ESP_LOGE(TAG, "fontSize selection: %d is not defined. Please select 24 or 48 or define new fonts", fontSize);
        break;
-   }
-   // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
-   // switch(display.width()) expression used as a function (?)
-        display.setCursor(5, 63);
-      
+   }      
    
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
    char hour[3];
@@ -188,9 +190,18 @@ void updateClock() {
    
    if (debugVerbose) printf("%s:%s -> Sending to epaper\n", hourBuffer, minuteBuffer);
 
-   display.print(hourBuffer);
-   display.print(":");
-   display.print(minuteBuffer);
+   // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
+   // switch(display.width()) expression used as a function (?)
+   uint16_t x = 5;
+   uint16_t y = 100;
+   display.setTextColor(EPD_BLACK);
+   display.setCursor(x, y);
+   display.printf("%s:%s",hourBuffer,minuteBuffer);
+   //display.print(minuteBuffer);
+   display.setTextColor(EPD_DGRAY);
+   display.setCursor(x+1, y+1);
+   display.printf("%s:%s",hourBuffer,minuteBuffer);
+   
    display.update(); 
    
 }
@@ -410,10 +421,14 @@ void setup() {
 
   SPI.begin();                    
   SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  
+ 
   display.begin();
-}
+  Serial.print("after display.begin()\n");
+  
+  }
 void loop()
 {
+    Serial.print("loop started\n");
     uint64_t startTime = esp_timer_get_time();
     // Initialize NVS
     esp_err_t err = nvs_flash_init();
@@ -425,8 +440,8 @@ void loop()
     }
     ESP_ERROR_CHECK( err );
     
-    printf("ESP32 deepsleep clock\n");
-    printf("Free heap memory: %d\n", xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
+    Serial.print("ESP32 deepsleep clock\n");
+    Serial.printf("Free heap memory: %d\n", xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
 
     // Turn off neopixel to keep consumption to the minimum
     gpio_set_direction((gpio_num_t)DOTSTAR_PWR, GPIO_MODE_OUTPUT);
@@ -441,7 +456,7 @@ void loop()
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
     } else {
-        if (debugVerbose) printf("Done. Check if it's the hour to refresh from intenet times (%d or %d)\n", syncHour1, syncHour2);
+        if (debugVerbose) Serial.printf("Done. Check if it's the hour to refresh from intenet times (%d or %d)\n", syncHour1, syncHour2);
 
         // Read stored
         nvs_get_i8(my_handle, "last_sync_h", &nvs_last_sync_hour);
@@ -450,7 +465,7 @@ void loop()
 
         err = nvs_get_i8(my_handle, "m", &nvs_minute);
          // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www. Only if it was not already done!
-         printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute);
+         Serial.printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute);
 
         // Sync on syncHour1 1 or 2 or when forceSync is true.
          if ((nvs_hour == syncHour1 || nvs_hour == syncHour2 || forceSync)  && (nvs_hour != nvs_last_sync_hour || forceSync)) {
