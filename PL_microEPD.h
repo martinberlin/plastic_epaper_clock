@@ -19,8 +19,8 @@ open source hardware by purchasing this product @Crowd_supply @Watterott @Plasti
 #include "Arduino.h"
 #endif
 
-#define EPD_WIDTH   (72)
-#define EPD_HEIGHT  (148)
+#define EPD_WIDTH   (240)
+#define EPD_HEIGHT  (146)
 
 #define EPD_BLACK 0x00
 #define EPD_DGRAY 0x01

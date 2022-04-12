@@ -55,7 +55,7 @@ bool forceSync = false;
 
 // 3rd: Update with your WiFi credentials
 #define CONFIG_ESP_WIFI_SSID "WLAN-724300"
-#define CONFIG_ESP_WIFI_PASSWORD ""
+#define CONFIG_ESP_WIFI_PASSWORD "50238634630558382093"
 
 #define CONFIG_ESP_MAXIMUM_RETRY 2
 #define CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER 1
@@ -90,9 +90,9 @@ uint16_t textColor = EPD_BLACK;
 // Main digital clock hour font:
 #include "fonts/Ubuntu_M24pt8b.h" // HH:mm
 #include "fonts/Ubuntu_M36pt7b.h" // HH:mm
-
+#include "fonts/Ubuntu_M48pt8b.h" // HH:mm
 // HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
-uint8_t fontSize = 24;
+uint8_t fontSize = 48;
 
 // HTTP_EVENT_ON_DATA callback needs to know what information is going to parse - UPDATE: Now parses always hour + date
 // - - - - - - - - On 1: time  2: day, month
@@ -129,18 +129,19 @@ void updateClock() {
    display.setFont(&Ubuntu_M16pt8b);
     
    // Day 01, Month  cursor location x,y
-   display.setCursor(14,22);  
-   display.setTextColor(EPD_DGRAY);
-   display.print(display.readTemperature()); // Only Celsious in this library
-   display.print("C");
-   display.setTextColor(textColor);
+//   display.setCursor(14,22);  
+//   display.setTextColor(EPD_DGRAY);
+//   display.print(display.readTemperature()); // Only Celsious in this library
+//   display.print("C");
+//   display.setTextColor(textColor);
    
    if (debugVerbose) {
     printf("updateClock() called\n");
     printf("display.print() Day, month: %s\n\n", nvs_day_month);
     }
-    display.setCursor(92,22);
-    display.setFont(&Ubuntu_M8pt8b);
+    uint8_t xpos = random(EPD_WIDTH-100);
+    display.setCursor(xpos,22);
+    display.setFont(&Ubuntu_M16pt8b);
     display.print(nvs_day_month);
 
    /**
@@ -149,6 +150,9 @@ void updateClock() {
    switch (fontSize)
    {
        /* Bigger font */
+   case 48:
+       display.setFont(&Ubuntu_M48pt8b);
+       break;
    case 36:
        display.setFont(&Ubuntu_M36pt7b);
        break;
@@ -187,10 +191,21 @@ void updateClock() {
    } 
    
    if (debugVerbose) printf("%s:%s -> Sending to epaper\n", hourBuffer, minuteBuffer);
-
-   display.print(hourBuffer);
-   display.print(":");
-   display.print(minuteBuffer);
+   // switch(display.width()) expression used as a function (?)
+   uint16_t x = 5;
+   uint16_t y = 100;
+   uint8_t color1 = random(3);
+   display.setTextColor(color1);
+   
+   uint8_t color2 = random(2)+1;
+   display.setCursor(x+color2, y+color1);
+   display.printf("%s:%s",hourBuffer,minuteBuffer);
+   
+   display.setTextColor(color2);
+   display.setCursor(x+1, y+1);
+   
+   display.printf("%s:%s",hourBuffer,minuteBuffer);
+   
    display.update(); 
    
 }
