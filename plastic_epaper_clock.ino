@@ -55,7 +55,7 @@ bool forceSync = false;
 
 // 3rd: Update with your WiFi credentials
 #define CONFIG_ESP_WIFI_SSID "WLAN-724300"
-#define CONFIG_ESP_WIFI_PASSWORD "50238634630558382093"
+#define CONFIG_ESP_WIFI_PASSWORD ""
 
 #define CONFIG_ESP_MAXIMUM_RETRY 2
 #define CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER 1
@@ -72,7 +72,7 @@ const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&
 char nvs_day_month[10];  // 15 if you want to store ", MON" (month)
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 1;
+int sleepMinutes = 2;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
@@ -80,7 +80,7 @@ uint8_t syncHour1 = 0;       // IMPORTANT: Leave it on 0 for the first run!    O
 uint8_t syncHour2 = 7;       // Same here, 2nd request to Sync hour 
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
-int64_t microsCorrection = -300000; // 0.3 predicted boot time
+int64_t microsCorrection = -600000; // 0.3 predicted boot time
 
 uint16_t backgroundColor = EPD_WHITE;
 uint16_t textColor = EPD_BLACK;
@@ -123,9 +123,8 @@ void updateClock() {
     // Half of display -NN should be the sum of pix per font
    uint8_t fontSpace = (fontSize/2); // Calculate aprox. how much space we need per font Character
 
-   display.clear();
+   //display.clear();
    display.fillScreen(backgroundColor);
-   display.setRotation(1);
    display.setFont(&Ubuntu_M16pt8b);
     
    // Day 01, Month  cursor location x,y
@@ -140,10 +139,11 @@ void updateClock() {
     printf("display.print() Day, month: %s\n\n", nvs_day_month);
     }
     uint8_t xpos = random(EPD_WIDTH-100);
-    display.setCursor(xpos,22);
+    display.setCursor(xpos,25);
     display.setFont(&Ubuntu_M16pt8b);
     display.print(nvs_day_month);
 
+  fontSize = (random(2) == 1) ? 48 : 36;
    /**
     * set font depending on selected fontSize
     */
@@ -198,14 +198,28 @@ void updateClock() {
    display.setTextColor(color1);
    
    uint8_t color2 = random(2)+1;
-   display.setCursor(x+color2, y+color1);
-   display.printf("%s:%s",hourBuffer,minuteBuffer);
+   uint16_t y_disp1 = y + random(10); 
+   uint16_t y_disp2 = y + random(10);
+   uint16_t y_disp3 = y + random(10);
+   uint16_t x_min = (fontSize==48) ? 14 : 7;
+   display.setCursor(x+color2, y_disp1);
+   display.printf("%s",hourBuffer);
+   display.setCursor(x+color2+color1+(fontSize*2)+7, y_disp2);
+   display.print(":");
+   display.setCursor(x+(fontSize*3)-x_min-color1, y_disp3);
+   display.printf("%s",minuteBuffer);
+   
    
    display.setTextColor(color2);
-   display.setCursor(x+1, y+1);
+   x++;
+   y++;
    
-   display.printf("%s:%s",hourBuffer,minuteBuffer);
-   
+   display.setCursor(x+color2, y_disp1);
+   display.printf("%s",hourBuffer);
+   display.setCursor(x+color2+color1+(fontSize*2)+7, y_disp2);
+   display.print(":");
+   display.setCursor(x+(fontSize*3)-x_min-color1, y_disp3);
+   display.printf("%s",minuteBuffer);
    display.update(); 
    
 }
@@ -426,6 +440,7 @@ void setup() {
   SPI.begin();                    
   SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  
   display.begin();
+  display.setRotation(1);
 }
 void loop()
 {
